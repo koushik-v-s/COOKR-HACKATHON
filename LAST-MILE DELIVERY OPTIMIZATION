@@ -1,0 +1,125 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+
+using namespace std;
+
+class Order {
+public:
+    int order_id;
+    int kitchen_id;
+    int customer_id;
+    int pickup_time;
+    int kitchen_distance;
+    int customer_distance;
+
+    Order(int id, int kitchen, int customer, int time, int k_distance, int c_distance) : order_id(id), kitchen_id(kitchen), customer_id(customer), pickup_time(time), kitchen_distance(k_distance), customer_distance(c_distance) {}
+};
+
+class Rider {
+public:
+    int rider_id;
+    vector<Order*> orders;
+
+    Rider(int id) : rider_id(id) {}
+
+    void addOrder(Order* order) {
+        orders.push_back(order);
+    }
+};
+
+bool canAssignToSameRider(Order* order1, Order* order2) {
+    // Rule #1
+    if (order1->kitchen_id == order2->kitchen_id && order1->customer_id == order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+    // Rule #2
+    else if (order1->kitchen_id != order2->kitchen_id && order1->customer_id == order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+    // Rule #3
+    else if (order1->kitchen_id == order2->kitchen_id && order1->customer_id != order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+    // Rule #4
+    else if (order1->kitchen_id != order2->kitchen_id && order1->customer_id == order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+    // Rule #5
+    else if (order1->kitchen_id != order2->kitchen_id && order1->customer_id == order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+    // Rule #6
+    else if (order1->customer_id == order2->customer_id && abs(order1->pickup_time - order2->pickup_time) <= 10 && order1->pickup_time < order2->pickup_time) {
+        if (order2->kitchen_distance <= 1) { // Check if second kitchen is on the way
+            return true;
+        }
+    }
+    // Rule #7
+    else if ((order1->customer_id == order2->customer_id - 1 || order1->customer_id == order2->customer_id + 1) && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        if (order2->kitchen_distance <= 1) { // Check if second kitchen is on the way
+            return true;
+        }
+    }
+    // Rule #8
+    else if (order1->kitchen_id == order2->kitchen_id && (order1->customer_id == order2->customer_id - 1 || order1->customer_id == order2->customer_id + 1) && abs(order1->pickup_time - order2->pickup_time) <= 10) {
+        return true;
+    }
+
+    return false;
+}
+
+int main() {
+    int num_orders;
+    cout << "Enter the number of orders: ";
+    cin >> num_orders;
+
+    vector<Order*> orders;
+    vector<Rider*> riders;
+
+    for (int i = 0; i < num_orders; ++i) {
+        int id, kitchen, customer, time, k_distance, c_distance;
+        cout << "Enter details for Order " << i + 1 << ":" << endl;
+        cout << "Order ID: ";
+        cin >> id;
+        cout << "Kitchen ID: ";
+        cin >> kitchen;
+        cout << "Customer ID: ";
+        cin >> customer;
+        cout << "Pickup Time: ";
+        cin >> time;
+        cout << "Distance from Kitchen: ";
+        cin >> k_distance;
+        cout << "Distance from Customer: ";
+        cin >> c_distance;
+        Order* order = new Order(id, kitchen, customer, time, k_distance, c_distance);
+        orders.push_back(order);
+    }
+
+    for (int i = 0; i < num_orders; ++i) {
+        Order* order = orders[i];
+        bool assigned = false;
+        for (Rider* rider : riders) {
+            if (!rider->orders.empty() && canAssignToSameRider(rider->orders[0], order)) {
+                rider->addOrder(order);
+                assigned = true;
+                break;
+            }
+        }
+        if (!assigned) {
+            Rider* new_rider = new Rider(i + 1);
+            new_rider->addOrder(order);
+            riders.push_back(new_rider);
+        }
+    }
+
+    for (Rider* rider : riders) {
+        cout << "Rider " << rider->rider_id << " Orders: ";
+        for (Order* order : rider->orders) {
+            cout << order->order_id << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}

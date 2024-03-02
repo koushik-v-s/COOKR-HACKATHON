@@ -1,0 +1,127 @@
+import numpy as np
+
+data = [
+    ("Idly", ["South Indian", "Protein Rich", "Breakfast", "Baked Items"]),
+    ("Chicken Vindaloo", ["North Indian", "Punjabi", "Non-Veg", "Chicken", "Protein Rich"]),
+    ("Ragi Dosa", ["South Indian", "Diabetic Friendly", "Millet Based", "Pregnancy friendly"]),
+    ("Poha", ["Maharashtrian", "Breakfast", "Vegetarian", "Healthy"]),
+    ("Samosa", ["North Indian", "Snack", "Vegetarian", "Deep Fried"]),
+    ("Biryani", ["Hyderabadi", "Main Course", "Non-Veg", "Spicy"]),
+    ("Pav Bhaji", ["Maharashtrian", "Street Food", "Vegetarian", "Spicy"]),
+    ("Gulab Jamun", ["Dessert", "Sweet", "Indian"]),
+    ("Dhokla", ["Gujarati", "Snack", "Vegetarian", "Steamed"]),
+    ("Chole Bhature", ["North Indian", "Main Course", "Vegetarian"]),
+    ("Masala Chai", ["Beverage", "Indian", "Tea", "Spiced"]),
+    ("Palak Paneer", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Dosa", ["South Indian", "Breakfast", "Vegetarian"]),
+    ("Rajma", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Aloo Paratha", ["North Indian", "Breakfast", "Vegetarian", "Healthy"]),
+    ("Fish Curry", ["Coastal", "Main Course", "Non-Veg"]),
+    ("Tandoori Chicken", ["North Indian", "Appetizer", "Non-Veg", "Grilled"]),
+    ("Kheer", ["Dessert", "Sweet", "Indian"]),
+    ("Vada Pav", ["Maharashtrian", "Street Food", "Vegetarian"]),
+    ("Misal Pav", ["Maharashtrian", "Street Food", "Vegetarian", "Spicy"]),
+    ("Pulao", ["Indian", "Main Course", "Rice"]),
+    ("Lassi", ["Beverage", "North Indian", "Yogurt"]),
+    ("Mango Pickle", ["Condiment", "Indian"]),
+    ("Chaat", ["Street Food", "Snack", "Spicy", "Sour"]),
+    ("Paneer Tikka", ["North Indian", "Appetizer", "Vegetarian", "Grilled"]),
+    ("Bhindi Masala", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Mutton Curry", ["North Indian", "Main Course", "Non-Veg", "Spicy"]),
+    ("Pani Puri", ["Street Food", "Snack", "Spicy", "Sour"]),
+    ("Butter Chicken", ["North Indian", "Main Course", "Non-Veg"]),
+    ("Jalebi", ["Dessert", "Sweet", "Indian"]),
+    ("Rasgulla", ["Dessert", "Sweet", "Indian"]),
+    ("Veg Manchurian", ["Indo-Chinese", "Appetizer", "Vegetarian"]),
+    ("Chicken Manchurian", ["Indo-Chinese", "Appetizer", "Non-Veg"]),
+    ("Hakka Noodles", ["Indo-Chinese", "Main Course", "Vegetarian"]),
+    ("Chilli Chicken", ["Indo-Chinese", "Main Course", "Non-Veg", "Spicy"]),
+    ("Gobi Manchurian", ["Indo-Chinese", "Appetizer", "Vegetarian"]),
+    ("Veg Fried Rice", ["Indo-Chinese", "Main Course", "Vegetarian"]),
+    ("Egg Curry", ["North Indian", "Main Course", "Non-Veg"]),
+    ("Raita", ["North Indian", "Side Dish", "Yogurt"]),
+    ("Dal Makhani", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Chapati", ["North Indian", "Main Course", "Bread"]),
+    ("Kadai Paneer", ["North Indian", "Main Course", "Vegetarian"]),
+    ("Mango Lassi", ["Beverage", "North Indian", "Yogurt", "Sweet"]),
+    ("Tandoori Roti", ["North Indian", "Main Course", "Bread", "Grilled"]),
+    ("Chana Masala", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Aloo Gobi", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Papdi Chaat", ["Street Food", "Snack", "Spicy", "Sour"]),
+    ("Veg Biryani", ["Indian", "Main Course", "Vegetarian"]),
+    ("Chicken Curry", ["North Indian", "Main Course", "Non-Veg", "Spicy"]),
+    ("Malai Kofta", ["North Indian", "Main Course", "Vegetarian", "Creamy"]),
+    ("Matar Paneer", ["North Indian", "Main Course", "Vegetarian", "Healthy"]),
+    ("Chicken Tikka", ["North Indian", "Appetizer", "Non-Veg", "Grilled"]),
+    ("Tikki", ["Snack", "Vegetarian", "Potato"]),
+    ("Rasam", ["South Indian", "Soup", "Healthy"]),
+    ("Tomato Soup", ["Soup", "Healthy"]),
+    ("Mango Shake", ["Beverage", "Drink", "Fruit"]),
+    ("Cold Coffee", ["Beverage", "Drink", "Coffee"]),
+    ("Lemonade", ["Beverage", "Drink", "Citrus"]),
+]
+
+def create_vocabulary(data):
+    vocabulary = set()
+    for item, categories in data:
+        vocabulary.update(item.lower().split())
+    return vocabulary
+
+def text_to_features(data, vocabulary):
+    X = []
+    for item, _ in data:
+        features = np.zeros(len(vocabulary))
+        for word in item.lower().split():
+            if word in vocabulary:
+                features[list(vocabulary).index(word)] = 1
+        X.append(features)
+    return np.array(X)
+
+def categories_to_labels(data, categories):
+    y = []
+    for _, item_categories in data:
+        label = np.zeros(len(categories))
+        for cat in item_categories:
+            label[categories.index(cat)] = 1
+        y.append(label)
+    return np.array(y)
+
+vocabulary = create_vocabulary(data)
+
+X = text_to_features(data, vocabulary)
+
+categories = list(set(category for _, item_categories in data for category in item_categories))
+
+y = categories_to_labels(data, categories)
+
+class MultiLabelClassifier:
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.randn(input_size, output_size)
+
+    def train(self, X, y, epochs=100, lr=0.01):
+        for _ in range(epochs):
+            output = self.predict(X)
+            error = y - output
+            self.weights += lr * X.T.dot(error)
+
+    def predict(self, X):
+        return np.round(1 / (1 + np.exp(-X.dot(self.weights))))
+
+model = MultiLabelClassifier(input_size=X.shape[1], output_size=y.shape[1])
+model.train(X, y)
+
+def predict_categories(item, model, vocabulary, categories):
+    features = np.zeros(len(vocabulary))
+    for word in item.lower().split():
+        if word in vocabulary:
+            features[list(vocabulary).index(word)] = 1
+    prediction = model.predict(features.reshape(1, -1))
+    predicted_categories = [categories[i] for i in range(len(categories)) if prediction[0][i] == 1]
+    return predicted_categories
+
+
+new_item = input("Enter the new item: ")
+
+predicted_categories = predict_categories(new_item, model, vocabulary, categories)
+
+print("Predicted categories for", new_item, ":", predicted_categories)
